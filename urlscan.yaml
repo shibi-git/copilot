@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: VirusTotal URL Scan API
+  description: API to scan a URL and get the report from VirusTotal.
+  version: "1.0.0"
+
+servers:
+  - url: https://www.virustotal.com/api/v3
+    description: VirusTotal API server
+
+paths:
+  /urls/{urlId}/report:
+    get:
+      operationId: getUrlReport
+      summary: Retrieve the VirusTotal scan report for a given URL.
+      parameters:
+        - name: urlId
+          in: path
+          required: true
+          description: The base64-encoded URL to scan.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful response with the URL scan report.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: The unique identifier for the URL scan in VirusTotal.
+                      type:
+                        type: string
+                        description: Type of the resource (e.g., "urls").
+                      attributes:
+                        type: object
+                        properties:
+                          scan_date:
+                            type: string
+                            format: date-time
+                            description: The date the URL was scanned.
+                          scan_url:
+                            type: string
+                            description: The URL that was scanned.
+                          malicious:
+                            type: boolean
+                            description: Whether the URL is identified as malicious.
+                          last_https_certificate_date:
+                            type: integer
+                            description: Last HTTPS certificate date as a Unix timestamp.
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                            description: Tags associated with the URL.
+        '400':
+          description: Invalid URL provided.
+        '404':
+          description: No scan report available for the given URL.
+        '500':
+          description: Internal server error.
+  
+components:
+  schemas:
+    UrlScanReport:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            attributes:
+              type: object
+              properties:
+                scan_date:
+                  type: string
+                  format: date-time
+                scan_url:
+                  type: string
+                malicious:
+                  type: boolean
+                last_https_certificate_date:
+                  type: integer
+                tags:
+                  type: array
+                  items:
+                    type: string
