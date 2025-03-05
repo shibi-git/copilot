@@ -1,0 +1,126 @@
+openapi: 3.0.0
+info:
+  title: VirusTotal URL Scan API
+  description: API to scan a URL and retrieve its report from VirusTotal.
+  version: "1.0.0"
+
+servers:
+  - url: https://www.virustotal.com/api/v3
+    description: VirusTotal API server
+
+paths:
+  /urls:
+    post:
+      operationId: scanUrl
+      summary: Scan a URL using VirusTotal.
+      description: Submit a URL to VirusTotal as a query parameter to check for malicious activity and receive an ID for the scan.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: The URL to scan. The URL should be passed as a query parameter.
+          schema:
+            type: string
+            example: "http://example.com"
+      responses:
+        '200':
+          description: URL successfully submitted for scanning, with an ID for retrieving the scan report.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: The ID of the URL scan in VirusTotal, used to retrieve the scan report.
+        '400':
+          description: Invalid URL format or missing data.
+        '500':
+          description: Internal server error.
+
+  /urls/{id}:
+    get:
+      operationId: getUrlReport
+      summary: Retrieve the scan report for a given URL scan ID.
+      description: Fetch the report for a specific URL scan using its ID returned from the initial scan submission.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the URL scan to retrieve the report for.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The scan report for the given URL ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: The unique identifier for the URL scan.
+                      type:
+                        type: string
+                        description: Type of resource (e.g., "urls").
+                      attributes:
+                        type: object
+                        properties:
+                          scan_url:
+                            type: string
+                            description: The scanned URL.
+                          scan_date:
+                            type: string
+                            format: date-time
+                            description: Date of the scan.
+                          malicious:
+                            type: boolean
+                            description: Whether the URL is detected as malicious.
+                          last_https_certificate_date:
+                            type: integer
+                            description: Last HTTPS certificate date as Unix timestamp.
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                            description: Tags related to the scanned URL.
+        '404':
+          description: Scan report not found for the given ID.
+        '500':
+          description: Internal server error.
+
+components:
+  schemas:
+    UrlScanReport:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            attributes:
+              type: object
+              properties:
+                scan_url:
+                  type: string
+                scan_date:
+                  type: string
+                  format: date-time
+                malicious:
+                  type: boolean
+                last_https_certificate_date:
+                  type: integer
+                tags:
+                  type: array
+                  items:
+                    type: string
