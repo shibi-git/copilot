@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: VirusTotal URL Scan API
-  description: API to scan a URL and get the report from VirusTotal.
+  description: API to scan a URL and retrieve its report from VirusTotal.
   version: "1.0.0"
 
 servers:
@@ -9,20 +9,24 @@ servers:
     description: VirusTotal API server
 
 paths:
-  /urls/{urlId}/report:
-    get:
-      operationId: getUrlReport
-      summary: Retrieve the VirusTotal scan report for a given URL.
-      parameters:
-        - name: urlId
-          in: path
-          required: true
-          description: The base64-encoded URL to scan.
-          schema:
-            type: string
+  /urls:
+    post:
+      operationId: scanUrl
+      summary: Scan a URL using VirusTotal.
+      description: Send a URL (base64-encoded) to VirusTotal to check for malicious activity.
+      requestBody:
+        description: The URL to be scanned, base64-encoded.
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The base64-encoded URL to scan.
       responses:
         '200':
-          description: A successful response with the URL scan report.
+          description: URL successfully submitted for scanning.
           content:
             application/json:
               schema:
@@ -33,38 +37,83 @@ paths:
                     properties:
                       id:
                         type: string
-                        description: The unique identifier for the URL scan in VirusTotal.
+                        description: The ID of the URL scan in VirusTotal.
                       type:
                         type: string
-                        description: Type of the resource (e.g., "urls").
+                        description: Type of resource (e.g., "urls").
                       attributes:
                         type: object
                         properties:
+                          scan_url:
+                            type: string
+                            description: The URL that was scanned.
                           scan_date:
                             type: string
                             format: date-time
                             description: The date the URL was scanned.
-                          scan_url:
-                            type: string
-                            description: The URL that was scanned.
                           malicious:
                             type: boolean
                             description: Whether the URL is identified as malicious.
+        '400':
+          description: Invalid URL format or missing data.
+        '500':
+          description: Internal server error.
+
+  /urls/{id}:
+    get:
+      operationId: getUrlReport
+      summary: Retrieve the scan report for a given URL scan ID.
+      description: Fetch the report for a specific URL scan using its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the URL scan to retrieve the report for.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The scan report for the given URL ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: The unique identifier for the URL scan.
+                      type:
+                        type: string
+                        description: Type of resource (e.g., "urls").
+                      attributes:
+                        type: object
+                        properties:
+                          scan_url:
+                            type: string
+                            description: The scanned URL.
+                          scan_date:
+                            type: string
+                            format: date-time
+                            description: Date of the scan.
+                          malicious:
+                            type: boolean
+                            description: Whether the URL is detected as malicious.
                           last_https_certificate_date:
                             type: integer
-                            description: Last HTTPS certificate date as a Unix timestamp.
+                            description: Last HTTPS certificate date as Unix timestamp.
                           tags:
                             type: array
                             items:
                               type: string
-                            description: Tags associated with the URL.
-        '400':
-          description: Invalid URL provided.
+                            description: Tags related to the scanned URL.
         '404':
-          description: No scan report available for the given URL.
+          description: Scan report not found for the given ID.
         '500':
           description: Internal server error.
-  
+
 components:
   schemas:
     UrlScanReport:
@@ -80,11 +129,11 @@ components:
             attributes:
               type: object
               properties:
+                scan_url:
+                  type: string
                 scan_date:
                   type: string
                   format: date-time
-                scan_url:
-                  type: string
                 malicious:
                   type: boolean
                 last_https_certificate_date:
